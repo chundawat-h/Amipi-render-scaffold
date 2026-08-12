@@ -1,0 +1,34 @@
+services:
+  # 1. FastAPI + Blender Backend (Docker)
+  - type: web
+    name: amipi-backend
+    env: docker
+    dockerContext: backend
+    dockerfilePath: backend/Dockerfile
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: amipi-db
+          property: connectionString
+      - key: ENVIRONMENT
+        value: production
+
+  # 2. Vite + React Frontend (Static Site)
+  - type: web
+    name: amipi-frontend
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    rootDir: frontend
+    plan: free
+    envVars:
+      - key: VITE_API_URL
+        value: https://amipi-backend.onrender.com
+
+databases:
+  # 3. PostgreSQL Database
+  - name: amipi-db
+    databaseName: amipi
+    user: amipi
+    plan: free

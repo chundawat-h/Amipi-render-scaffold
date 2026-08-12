@@ -1,3 +1,4 @@
+import os
 import shutil
 from pathlib import Path
 
@@ -10,7 +11,8 @@ from app.services.render_dispatch import run_job
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
-UPLOAD_DIR = Path(__file__).resolve().parent.parent.parent / "storage" / "uploads"
+_DEFAULT_UPLOAD = Path(__file__).resolve().parent.parent.parent / "storage" / "uploads"
+UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", str(_DEFAULT_UPLOAD)))
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 INPUT_TYPE_BY_EXT = {
