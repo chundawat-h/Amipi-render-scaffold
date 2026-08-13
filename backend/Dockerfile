@@ -30,6 +30,7 @@ COPY . .
 RUN mkdir -p /app/storage/outputs /app/storage/uploads
 RUN chmod -R 777 /app/storage
 
-EXPOSE 8000
+EXPOSE 10000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Render injects a PORT env var (default 10000). Use shell form so $PORT is expanded at runtime.
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}

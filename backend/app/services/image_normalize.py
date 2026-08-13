@@ -17,10 +17,12 @@ be flagged for a proper CAD/STL re-render when possible.
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
-from rembg import remove
 
 
 def normalize_existing_image(input_path: str, template_config: dict, out_dir: Path) -> dict:
+    # Lazy-import rembg so that onnxruntime doesn't block server startup
+    from rembg import remove
+
     src = Image.open(input_path).convert("RGBA")
 
     # 1. Remove existing (often dark / inconsistent) background
