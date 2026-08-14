@@ -26,6 +26,10 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 # Copy backend source code
 COPY . .
 
+# Pre-download the rembg model during the build step so it doesn't delay the first render
+# We use the lightweight 'u2netp' model to prevent memory crashes on the free tier
+RUN python3 -c "from rembg import new_session; new_session('u2netp')"
+
 # Ensure storage directories exist for ephemeral storage
 RUN mkdir -p /app/storage/outputs /app/storage/uploads
 RUN chmod -R 777 /app/storage

@@ -21,12 +21,15 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
 def normalize_existing_image(input_path: str, template_config: dict, out_dir: Path) -> dict:
     # Lazy-import rembg so that onnxruntime doesn't block server startup
-    from rembg import remove
+    from rembg import remove, new_session
 
     src = Image.open(input_path).convert("RGBA")
 
     # 1. Remove existing (often dark / inconsistent) background
-    cutout = remove(src)
+    # Use the lightweight 'u2netp' model (~4MB) instead of default 'u2net' (~170MB)
+    # This prevents Out-Of-Memory (OOM) crashes on Render's 512MB RAM free tier.
+    session = new_session("u2netp")
+    cutout = remove(src, session=session)
 
     # 2. Canvas + background colour
     bg_cfg = template_config.get("background", {})
