@@ -78,3 +78,28 @@ def list_jobs(status: str | None = None, db: Session = Depends(get_db)):
     if status:
         q = q.filter_by(status=status)
     return q.order_by(models.RenderJob.created_at.desc()).limit(200).all()
+
+
+@router.delete("/{job_id}", status_code=204)
+def delete_job(job_id: int, db: Session = Depends(get_db)):
+    job = db.get(models.RenderJob, job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+    
+    # Delete associated files to save space
+    try:
+        from app.services.render_dispatch import OUTPUT_DIR
+        job_out_dir = OUTPUT_DIR / f"job_{job.id}"
+        if job_out_dir.exists() and job_out_dir.is_dir():
+            shutil.rmtree(job_out_dir)
+        
+        if job.input_path:
+            input_file = Path(job.input_path)
+            if input_file.exists():
+                input_file.unlink()
+    except Exception as e:
+        print(f"[WARN] Failed to delete files for job {job.id}: {e}")
+
+    db.delete(job)
+    db.commit()
+    return

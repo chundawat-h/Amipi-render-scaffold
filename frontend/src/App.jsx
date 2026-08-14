@@ -255,7 +255,7 @@ const OUTPUT_LINKS = [
   { key: 'hero_3quarter', label: '3-Quarter' },
 ]
 
-function JobCard({ job, index, onLightbox }) {
+function JobCard({ job, index, onLightbox, onDelete }) {
   const outputs = job.output_paths ?? {}
   const thumb   = outputs.thumbnail
   const hero    = outputs.hero ?? thumb
@@ -307,7 +307,17 @@ function JobCard({ job, index, onLightbox }) {
                 {job.input_type?.toUpperCase()} · {job.pipeline === 'render_3d' ? '3D Blender render' : '2D photo normalise'}
               </p>
             </div>
-            <StatusPill status={job.status} />
+            <div className="flex items-center gap-2">
+              <StatusPill status={job.status} />
+              <button 
+                onClick={() => onDelete(job.id)}
+                className="text-xs px-2 py-1 rounded transition-colors"
+                title="Delete this job"
+                style={{ background: 'rgba(220,38,38,0.1)', color: '#f87171' }}
+              >
+                Delete
+              </button>
+            </div>
           </div>
 
           {/* Error message */}
@@ -349,7 +359,7 @@ function JobCard({ job, index, onLightbox }) {
 // ---------------------------------------------------------------------------
 // Job ledger
 // ---------------------------------------------------------------------------
-function JobLedger({ jobs, onLightbox }) {
+function JobLedger({ jobs, onLightbox, onDelete }) {
   return (
     <section className="mt-10 animate-fade-up" style={{ animationDelay: '0.25s' }}>
       <div className="flex items-center justify-between mb-4">
@@ -365,7 +375,7 @@ function JobLedger({ jobs, onLightbox }) {
       ) : (
         <div className="space-y-3">
           {jobs.map((job, i) => (
-            <JobCard key={job.id} job={job} index={i} onLightbox={onLightbox} />
+            <JobCard key={job.id} job={job} index={i} onLightbox={onLightbox} onDelete={onDelete} />
           ))}
         </div>
       )}
@@ -379,6 +389,16 @@ function JobLedger({ jobs, onLightbox }) {
 export default function App() {
   const { jobs, refresh } = useJobs()
   const [lightbox, setLightbox] = useState(null)
+
+  const deleteJob = async (jobId) => {
+    if (!window.confirm("Are you sure you want to delete this job?")) return;
+    try {
+      await fetch(`${API}/jobs/${jobId}`, { method: 'DELETE' })
+      refresh()
+    } catch (e) {
+      console.error("Failed to delete job", e)
+    }
+  }
 
   return (
     <div className="min-h-screen">
@@ -409,7 +429,7 @@ export default function App() {
       {/* Main */}
       <main className="max-w-2xl mx-auto px-4 py-12">
         <UploadPanel onQueued={refresh} />
-        <JobLedger jobs={jobs} onLightbox={setLightbox} />
+        <JobLedger jobs={jobs} onLightbox={setLightbox} onDelete={deleteJob} />
       </main>
 
       {/* Subtle bottom gradient */}
